@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_carrot_market_d5354/page/home.dart';
+import 'package:flutter_carrot_market_d5354/page/app.dart';
 
 void main() {
   runApp(const MainApp());
@@ -24,7 +24,7 @@ class MainApp extends StatelessWidget {
           ),
         )
       ),
-      home: Home(),
+      home: App(),
     );
   }
 }

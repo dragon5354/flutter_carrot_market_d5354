@@ -1,3 +1,6 @@
+/* 
+  #1 ~ #4에서 시작 화면을 담당했던 home을, #5부터 app은 bottomNavigation 담당, home은 그 안의 home이라는 페이지를 담당하는 것으로 바꿈
+*/
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -13,16 +16,20 @@ class _HomeState extends State<Home> {
   // 원래는 API에서 데이터를 받아오지만, view쪽 화면 구성이라 List로 대체함
   List<Map<String, String>> datas = [];
 
-  // 아래 바텀네비게이션쪽 선언
-  late int _currentPageIndex;
+  // 앱바 값 변환시킬 수 있게
+  late String currentLocation;
+
+  final Map<String, String> locatioTypeToString = {
+    "ara": "아라동",
+    "ora": "오라동",
+    "donam": "도남동",
+  };
 
   // 시작시 값을 불러와야 하기에 initState 안에 List
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    // 바텀네비게이션 초기화
-    _currentPageIndex = 0;
+    currentLocation = "ara"; // 초기값
     datas = [
       {
         "image": "assets/images/1.jpg",
@@ -97,39 +104,63 @@ class _HomeState extends State<Home> {
     ];
   }
 
-  // Appbar 위젯
-  // 요즘에는 PreferredSizeWiget(높이가 있는 위젯)으로 받아둬야 오류가 발생하지 않음
-  PreferredSizeWidget _appbarWidget() {
-    return AppBar(
-        title: GestureDetector(
-          onTap: () {
-            print('click');
-          },
-          child: Row(
-            children: [
-              Text("아라동"),
-              Icon(Icons.arrow_drop_down)
-            ],
-          ),
-        ),
-        elevation: 1,
-        actions: [
-          IconButton(onPressed: (){}, icon: Icon(Icons.search)), // 검색 아이콘
-          IconButton(onPressed: (){}, icon: Icon(Icons.tune)), // tune 아이콘
-          IconButton(onPressed: (){}, icon: SvgPicture.asset("assets/svg/bell.svg",width: 22,)), // 종 아이콘. 보통 이렇게 혼용해서 안 쓰긴 하는데 그냥 연습 겸해서 써봄
-        ],
-      );
-  }
-
   // String to Won, 단위 변환용
-  final oCcy = NumberFormat("#,###","Ko_KR");
+  final oCcy = NumberFormat("#,###", "Ko_KR");
   String calcStringToWon(String priceString) {
     return "${oCcy.format(int.parse(priceString))}원";
   }
 
-  // body 위젯
+// Appbar 위젯
+// 요즘에는 PreferredSizeWiget(높이가 있는 위젯)으로 받아둬야 오류가 발생하지 않음
+  PreferredSizeWidget _appbarWidget() {
+    return AppBar(
+      title: GestureDetector(
+        onTap: () {
+          print('click');
+        },
+        // 동 이름 눌렀을때 선택 가능하게
+        child: PopupMenuButton<String>(
+          offset: Offset(0, 25),
+          shape: ShapeBorder.lerp(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+              1),
+          onSelected: (String where) {
+            print(where);
+            setState(() {
+              currentLocation = where;
+            });
+          },
+          itemBuilder: (BuildContext context) {
+            return [
+              PopupMenuItem(value: "ara", child: Text("아라동")),
+              PopupMenuItem(value: "ora", child: Text("오라동")),
+              PopupMenuItem(value: "donam", child: Text("도남동")),
+            ];
+          },
+          child: Row(
+            children: [Text(locatioTypeToString[currentLocation].toString()), Icon(Icons.arrow_drop_down)],
+          ),
+        ),
+      ),
+      elevation: 1,
+      actions: [
+        IconButton(onPressed: () {}, icon: Icon(Icons.search)), // 검색 아이콘
+        IconButton(onPressed: () {}, icon: Icon(Icons.tune)), // tune 아이콘
+        IconButton(
+            onPressed: () {},
+            icon: SvgPicture.asset(
+              "assets/svg/bell.svg",
+              width: 22,
+            )), // 종 아이콘. 보통 이렇게 혼용해서 안 쓰긴 하는데 그냥 연습 겸해서 써봄
+      ],
+    );
+  }
+
+// body 위젯
   Widget _bodyWidget() {
-    return ListView.separated( //Listview 중 분할선을 커스터마이징 가능
+    return ListView.separated(
+      //Listview 중 분할선을 커스터마이징 가능
       padding: const EdgeInsets.symmetric(horizontal: 10),
       // 내용물 부분
       itemBuilder: (BuildContext _context, int index) {
@@ -138,7 +169,8 @@ class _HomeState extends State<Home> {
           child: Row(
             children: [
               // 이미지
-              ClipRRect( // child를 특정한 모양으로 강제함
+              ClipRRect(
+                // child를 특정한 모양으로 강제함
                 borderRadius: BorderRadius.all(Radius.circular(10)),
                 child: Image.asset(
                   datas[index]["image"].toString(),
@@ -152,39 +184,47 @@ class _HomeState extends State<Home> {
                   height: 100,
                   padding: const EdgeInsets.only(left: 20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        datas[index]["title"].toString(),
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 15),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          datas[index]["title"].toString(),
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 15),
                         ),
-                      SizedBox(height: 5,),
-                      Text(
-                        datas[index]["location"].toString(),
-                        style: TextStyle(fontSize: 12, color: Colors.black.withOpacity(0.3)),
+                        SizedBox(
+                          height: 5,
                         ),
-                      SizedBox(height: 5,),
-                      Text(
-                        calcStringToWon(datas[index]["price"].toString()),
-                        style: TextStyle(fontWeight: FontWeight.w500),
+                        Text(
+                          datas[index]["location"].toString(),
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black.withOpacity(0.3)),
                         ),
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            SvgPicture.asset("assets/svg/heart_off.svg",width: 13, 
-                            height: 13,
-                            ),
-                            SizedBox(width: 5,),
-                            Text(datas[index]["likes"].toString()),
-                          ],
+                        SizedBox(
+                          height: 5,
                         ),
-                      ),
-              
-                    ]
-                  ),
+                        Text(
+                          calcStringToWon(datas[index]["price"].toString()),
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SvgPicture.asset(
+                                "assets/svg/heart_off.svg",
+                                width: 13,
+                                height: 13,
+                              ),
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Text(datas[index]["likes"].toString()),
+                            ],
+                          ),
+                        ),
+                      ]),
                 ),
               )
             ],
@@ -202,51 +242,11 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // bottomNavigation에서 사용할 것
-  // bottomNavigation 내부 구조가 다 같아서 하나로 빼줌
-  BottomNavigationBarItem _bottomNavigationBarItem(
-      String iconName, String label) {
-    return BottomNavigationBarItem(
-      icon: Padding(
-        padding: const EdgeInsets.only(bottom: 5),
-        child: SvgPicture.asset("assets/svg/${iconName}_off.svg", width: 22),
-      ),
-      label: label
-    );
-  }
-
-  // bottomNavigationBar 위젯
-    Widget _bottomNavigationBarWidget() {
-      return BottomNavigationBar(
-        // 눌렀을때 애니메이션 효과 설정
-        type: BottomNavigationBarType.fixed,
-        onTap: (int index) {
-          print(index);
-          setState(() {
-            // 누르면 해당 페이지 번호로 가게 해줌
-            _currentPageIndex = index;
-          });
-        },
-        currentIndex: _currentPageIndex,
-        selectedItemColor: Colors.black, // 눌렀을때 색깔
-        selectedLabelStyle: TextStyle(color: Colors.black), // 눌렀을때 색깔
-        selectedFontSize: 12, // 눌렀을때 폰트크기
-        items: [
-          _bottomNavigationBarItem("home", "홈"),
-          _bottomNavigationBarItem("notes", "동네생활"),
-          _bottomNavigationBarItem("location", "내 근처"),
-          _bottomNavigationBarItem("chat", "채팅"),
-          _bottomNavigationBarItem("user", "나의 당근")
-        ]
-      );
-    }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appbarWidget(),
       body: _bodyWidget(),
-      bottomNavigationBar: _bottomNavigationBarWidget(),
     );
   }
 }
