@@ -12,11 +12,17 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   // 원래는 API에서 데이터를 받아오지만, view쪽 화면 구성이라 List로 대체함
   List<Map<String, String>> datas = [];
+
+  // 아래 바텀네비게이션쪽 선언
+  late int _currentPageIndex;
+
   // 시작시 값을 불러와야 하기에 initState 안에 List
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    // 바텀네비게이션 초기화
+    _currentPageIndex = 0;
     datas = [
       {
         "image": "assets/images/1.jpg",
@@ -196,11 +202,51 @@ class _HomeState extends State<Home> {
     );
   }
 
+  // bottomNavigation에서 사용할 것
+  // bottomNavigation 내부 구조가 다 같아서 하나로 빼줌
+  BottomNavigationBarItem _bottomNavigationBarItem(
+      String iconName, String label) {
+    return BottomNavigationBarItem(
+      icon: Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: SvgPicture.asset("assets/svg/${iconName}_off.svg", width: 22),
+      ),
+      label: label
+    );
+  }
+
+  // bottomNavigationBar 위젯
+    Widget _bottomNavigationBarWidget() {
+      return BottomNavigationBar(
+        // 눌렀을때 애니메이션 효과 설정
+        type: BottomNavigationBarType.fixed,
+        onTap: (int index) {
+          print(index);
+          setState(() {
+            // 누르면 해당 페이지 번호로 가게 해줌
+            _currentPageIndex = index;
+          });
+        },
+        currentIndex: _currentPageIndex,
+        selectedItemColor: Colors.black, // 눌렀을때 색깔
+        selectedLabelStyle: TextStyle(color: Colors.black), // 눌렀을때 색깔
+        selectedFontSize: 12, // 눌렀을때 폰트크기
+        items: [
+          _bottomNavigationBarItem("home", "홈"),
+          _bottomNavigationBarItem("notes", "동네생활"),
+          _bottomNavigationBarItem("location", "내 근처"),
+          _bottomNavigationBarItem("chat", "채팅"),
+          _bottomNavigationBarItem("user", "나의 당근")
+        ]
+      );
+    }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appbarWidget(),
       body: _bodyWidget(),
+      bottomNavigationBar: _bottomNavigationBarWidget(),
     );
   }
 }
