@@ -2,6 +2,7 @@
   #1 ~ #4에서 시작 화면을 담당했던 home을, #5부터 app은 bottomNavigation 담당, home은 그 안의 home이라는 페이지를 담당하는 것으로 바꿈
 */
 import 'package:flutter/material.dart';
+import 'package:flutter_carrot_market_d5354/repository/contents_repository.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
@@ -13,11 +14,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  // 원래는 API에서 데이터를 받아오지만, view쪽 화면 구성이라 List로 대체함
-  List<Map<String, String>> datas = [];
-
   // 앱바 값 변환시킬 수 있게
   late String currentLocation;
+
+  // 리포지토리 미리 선언
+  late ContentsRepository contentsRepository;
 
   final Map<String, String> locatioTypeToString = {
     "ara": "아라동",
@@ -30,83 +31,19 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     currentLocation = "ara"; // 초기값
-    datas = [
-      {
-        "image": "assets/images/1.jpg",
-        "title": "네메시스 축구화275",
-        "location": "제주 제주시 아라동",
-        "price": "30000",
-        "likes": "2"
-      },
-      {
-        "image": "assets/images/2.jpg",
-        "title": "LA갈비 5kg팔아요~",
-        "location": "제주 제주시 아라동",
-        "price": "100000",
-        "likes": "5"
-      },
-      {
-        "image": "assets/images/3.jpg",
-        "title": "치약팝니다",
-        "location": "제주 제주시 아라동",
-        "price": "5000",
-        "likes": "0"
-      },
-      {
-        "image": "assets/images/4.jpg",
-        "title": "[풀박스]맥북프로16인치 터치바 스페이스그레이",
-        "location": "제주 제주시 아라동",
-        "price": "2500000",
-        "likes": "6"
-      },
-      {
-        "image": "assets/images/5.jpg",
-        "title": "디월트존기임팩",
-        "location": "제주 제주시 아라동",
-        "price": "150000",
-        "likes": "2"
-      },
-      {
-        "image": "assets/images/6.jpg",
-        "title": "갤럭시s10",
-        "location": "제주 제주시 아라동",
-        "price": "180000",
-        "likes": "2"
-      },
-      {
-        "image": "assets/images/7.jpg",
-        "title": "선반",
-        "location": "제주 제주시 아라동",
-        "price": "15000",
-        "likes": "2"
-      },
-      {
-        "image": "assets/images/8.jpg",
-        "title": "냉장 쇼케이스",
-        "location": "제주 제주시 아라동",
-        "price": "80000",
-        "likes": "3"
-      },
-      {
-        "image": "assets/images/9.jpg",
-        "title": "대우 미니냉장고",
-        "location": "제주 제주시 아라동",
-        "price": "30000",
-        "likes": "3"
-      },
-      {
-        "image": "assets/images/10.jpg",
-        "title": "멜킨스 풀업 턱걸이 판매합니다.",
-        "location": "제주 제주시 아라동",
-        "price": "50000",
-        "likes": "7"
-      },
-    ];
+  }
+
+  // 리포지토리 값 불러오기
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    contentsRepository = ContentsRepository();
   }
 
   // String to Won, 단위 변환용
   final oCcy = NumberFormat("#,###", "Ko_KR");
   String calcStringToWon(String priceString) {
+    if(priceString=="무료나눔") return priceString;
     return "${oCcy.format(int.parse(priceString))}원";
   }
 
@@ -139,7 +76,10 @@ class _HomeState extends State<Home> {
             ];
           },
           child: Row(
-            children: [Text(locatioTypeToString[currentLocation].toString()), Icon(Icons.arrow_drop_down)],
+            children: [
+              Text(locatioTypeToString[currentLocation].toString()),
+              Icon(Icons.arrow_drop_down)
+            ],
           ),
         ),
       ),
@@ -157,8 +97,12 @@ class _HomeState extends State<Home> {
     );
   }
 
-// body 위젯
-  Widget _bodyWidget() {
+  _loadContents() {
+    return contentsRepository.loadContentsFromLocation(currentLocation);
+  }
+
+  _makeDataList(List<Map<String, String>> datas) {
+    // List<Map<String, String>> datas = snapshot.data ?? [];
     return ListView.separated(
       //Listview 중 분할선을 커스터마이징 가능
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -240,6 +184,28 @@ class _HomeState extends State<Home> {
         );
       },
     );
+  }
+
+// body 위젯
+  Widget _bodyWidget() {
+    return FutureBuilder(
+        future: _loadContents(),
+        builder: (BuildContext context,
+            AsyncSnapshot<List<Map<String, String>>?> snapshot) {
+          // 데이터 불러오기 전 로딩바
+          if (snapshot.connectionState != ConnectionState.done) {
+            return Center(child: CircularProgressIndicator());
+          }
+          // 오류가 있을 때
+          if (snapshot.hasError) {
+            return Center(child: Text("데이터 오류"));
+          }
+          if (snapshot.hasData) {
+            return _makeDataList(snapshot.data ?? []);
+          }
+
+          return Center(child: Text("해당 지역에 데이터가 없습니다."),);
+        });
   }
 
   @override
