@@ -8,7 +8,9 @@ environment:
 
 # svg : 벡터 형식 이미지(크기가 바뀌어도 해상도가 떨어지지 않음)
 # intl : 단위 변환용(원)
+# carousel_slider : 다양한 슬라이더 제공
 dependencies:
+  carousel_slider: ^4.2.1
   flutter:
     sdk: flutter
   flutter_svg: ^2.0.7
