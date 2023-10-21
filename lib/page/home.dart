@@ -4,8 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_carrot_market_d5354/page/detail.dart';
 import 'package:flutter_carrot_market_d5354/repository/contents_repository.dart';
+import 'package:flutter_carrot_market_d5354/utils/data_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -39,13 +39,6 @@ class _HomeState extends State<Home> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     contentsRepository = ContentsRepository();
-  }
-
-  // String to Won, 단위 변환용
-  final oCcy = NumberFormat("#,###", "Ko_KR");
-  String calcStringToWon(String priceString) {
-    if (priceString == "무료나눔") return priceString;
-    return "${oCcy.format(int.parse(priceString))}원";
   }
 
 // Appbar 위젯
@@ -162,7 +155,7 @@ class _HomeState extends State<Home> {
                             height: 5,
                           ),
                           Text(
-                            calcStringToWon(datas[index]["price"].toString()),
+                            DataUtils.calcStringToWon(datas[index]["price"].toString()),
                             style: TextStyle(fontWeight: FontWeight.w500),
                           ),
                           Expanded(

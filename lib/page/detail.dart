@@ -4,6 +4,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carrot_market_d5354/components/manor_temperature_widget.dart';
+import 'package:flutter_carrot_market_d5354/utils/data_utils.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class DetailContentView extends StatefulWidget {
   Map<String, String> data;
@@ -13,7 +15,9 @@ class DetailContentView extends StatefulWidget {
   State<DetailContentView> createState() => _DetailContentViewState();
 }
 
-class _DetailContentViewState extends State<DetailContentView> {
+// 애니메이션 기능을 사용할 것이라 상속받음
+class _DetailContentViewState extends State<DetailContentView>
+    with SingleTickerProviderStateMixin {
   // 휴대폰 기종에 맞춘 크기 받아오기
   Size? size;
 
@@ -21,6 +25,34 @@ class _DetailContentViewState extends State<DetailContentView> {
   late List<String> imgList;
 
   int? _current;
+
+  // 스크롤 컨트롤러
+  ScrollController _controller = ScrollController();
+  // 스크롤 위치 받아올 초기값
+  double scrollpositionToAlpha = 0;
+
+  late AnimationController _animationController;
+  late Animation _colorTween;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _animationController = AnimationController(vsync: this);
+    _colorTween = ColorTween(begin: Colors.white, end: Colors.black)
+        .animate(_animationController);
+    _controller.addListener(() {
+      // 스크롤 위치가 변하면 값을 변화시킴
+      setState(() {
+        if (_controller.offset > 255) {
+          scrollpositionToAlpha = 255;
+        } else {
+          scrollpositionToAlpha = _controller.offset;
+        }
+        _animationController.value = scrollpositionToAlpha / 255;
+      });
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -37,22 +69,33 @@ class _DetailContentViewState extends State<DetailContentView> {
     ];
   }
 
+  // 색 바꾸는 애니메이션 부분을 위젯으로 처리
+  Widget _makeIcon(IconData icon) {
+    return AnimatedBuilder(
+        animation: _colorTween,
+        builder: (context, child) => Icon(
+              icon,
+              color: _colorTween.value,
+            ));
+  }
+
   PreferredSizeWidget _appbarWidget() {
     return AppBar(
-      backgroundColor: Colors.transparent, // 투명 앱바
+      backgroundColor: Colors.white
+          .withAlpha(scrollpositionToAlpha.toInt()), // 스크롤바 위치값을 받아와서 색상 변경
       elevation: 0,
       // 뒤로가기 임시 비활성화.
       leading: IconButton(
         onPressed: () {
           Navigator.pop(context);
         },
-        icon: Icon(Icons.arrow_back, color: Colors.white),
+        icon: _makeIcon(Icons.arrow_back)
       ),
       actions: [
         IconButton(
-            onPressed: () {}, icon: Icon(Icons.share, color: Colors.white)),
+            onPressed: () {}, icon: _makeIcon(Icons.share)),
         IconButton(
-            onPressed: () {}, icon: Icon(Icons.more_vert, color: Colors.white)),
+            onPressed: () {}, icon: _makeIcon(Icons.more_vert)),
       ],
     );
   }
@@ -225,7 +268,7 @@ class _DetailContentViewState extends State<DetailContentView> {
 
   Widget _bodyWidget() {
     // 리스트를 처리하기 위해선 singlechildscrollview 대신 custom을 써야 함
-    return CustomScrollView(slivers: [
+    return CustomScrollView(controller: _controller, slivers: [
       SliverList(
           delegate: SliverChildListDelegate([
         _makeSliderImage(),
@@ -271,9 +314,60 @@ class _DetailContentViewState extends State<DetailContentView> {
 
   Widget _bottomBarWidget() {
     return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
       width: size!.width,
       height: 55,
-      color: Colors.red,
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              print("관심상품 이벤트 발생");
+            },
+            child: SvgPicture.asset("assets/svg/heart_off.svg",
+                width: 25, height: 25),
+          ),
+          Container(
+            margin: EdgeInsets.only(left: 15, right: 10),
+            width: 1,
+            height: 40,
+            color: Colors.black.withOpacity(0.3),
+          ),
+          Column(
+            children: [
+              Text(
+                DataUtils.calcStringToWon(widget.data["price"].toString()),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                "가격제안불가",
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              )
+            ],
+          ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5),
+                    color: Color(0xfff08f4f),
+                  ),
+                  child: Text(
+                    "채팅으로 거래하기",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 
