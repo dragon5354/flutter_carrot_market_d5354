@@ -31,13 +31,18 @@ class _DetailContentViewState extends State<DetailContentView>
   // 스크롤 위치 받아올 초기값
   double scrollpositionToAlpha = 0;
 
+  // 애니메이션 컨트롤러와 값
   late AnimationController _animationController;
   late Animation _colorTween;
+
+  // 관심상품용 값 => 기본적으로 false 상태로 둘 것
+  late bool isMyFavoriteContent;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    isMyFavoriteContent = false;
     _animationController = AnimationController(vsync: this);
     _colorTween = ColorTween(begin: Colors.white, end: Colors.black)
         .animate(_animationController);
@@ -86,16 +91,13 @@ class _DetailContentViewState extends State<DetailContentView>
       elevation: 0,
       // 뒤로가기 임시 비활성화.
       leading: IconButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        icon: _makeIcon(Icons.arrow_back)
-      ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: _makeIcon(Icons.arrow_back)),
       actions: [
-        IconButton(
-            onPressed: () {}, icon: _makeIcon(Icons.share)),
-        IconButton(
-            onPressed: () {}, icon: _makeIcon(Icons.more_vert)),
+        IconButton(onPressed: () {}, icon: _makeIcon(Icons.share)),
+        IconButton(onPressed: () {}, icon: _makeIcon(Icons.more_vert)),
       ],
     );
   }
@@ -321,10 +323,24 @@ class _DetailContentViewState extends State<DetailContentView>
         children: [
           GestureDetector(
             onTap: () {
-              print("관심상품 이벤트 발생");
+              setState(() {
+                isMyFavoriteContent = !isMyFavoriteContent; // 토글 방식
+              });
+              // 스낵바 사용이 키 대신 ScaffoldMessenger 쓰는 식으로 바뀜(기존 방식은 안 됨)
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                duration: Duration(milliseconds: 1000),
+                content: Text(
+                    isMyFavoriteContent ? "관심목록에 추가됐어요." : "관심목록에서 제거됐어요."),
+              ));
             },
-            child: SvgPicture.asset("assets/svg/heart_off.svg",
-                width: 25, height: 25),
+            child: SvgPicture.asset(
+              isMyFavoriteContent
+                  ? "assets/svg/heart_on.svg"
+                  : "assets/svg/heart_off.svg",
+              width: 25,
+              height: 25,
+              color: Color(0xfff08f4f),
+            ),
           ),
           Container(
             margin: EdgeInsets.only(left: 15, right: 10),
