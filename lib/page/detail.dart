@@ -3,6 +3,7 @@
 */
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_carrot_market_d5354/components/manor_temperature_widget.dart';
 
 class DetailContentView extends StatefulWidget {
   Map<String, String> data;
@@ -56,7 +57,8 @@ class _DetailContentViewState extends State<DetailContentView> {
     );
   }
 
-  Widget _bodyWidget() {
+  // 이미지 슬라이더를 위젯으로 분리
+  Widget _makeSliderImage() {
     return Container(
       child: Stack(
         children: [
@@ -97,7 +99,8 @@ class _DetailContentViewState extends State<DetailContentView> {
                   child: Container(
                     width: 12.0,
                     height: 12.0,
-                    margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                    margin:
+                        EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: (Theme.of(context).brightness == Brightness.dark
@@ -111,6 +114,40 @@ class _DetailContentViewState extends State<DetailContentView> {
           ),
         ],
       ),
+    );
+  }
+
+  // 판매자 정보
+  Widget _sellerSimpleInfo() {
+    return Padding(
+      padding: const EdgeInsets.all(15.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundImage: Image.asset("assets/images/user.png").image,
+          ),
+          SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("dragon5354",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text("부천시 소사구")
+            ],
+          ),
+          Expanded(child: ManorTemperature(manorTemp: 37.5))
+        ],
+      ),
+    );
+  }
+
+  Widget _bodyWidget() {
+    return Column(
+      children: [
+        _makeSliderImage(),
+        _sellerSimpleInfo(),
+      ],
     );
   }
 
