@@ -4,6 +4,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carrot_market_d5354/components/manor_temperature_widget.dart';
+import 'package:flutter_carrot_market_d5354/repository/contents_repository.dart';
 import 'package:flutter_carrot_market_d5354/utils/data_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -38,14 +39,19 @@ class _DetailContentViewState extends State<DetailContentView>
   // 관심상품용 값 => 기본적으로 false 상태로 둘 것
   late bool isMyFavoriteContent;
 
+  // 리포지토리
+  late ContentsRepository contentsRepository;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     isMyFavoriteContent = false;
     _animationController = AnimationController(vsync: this);
+    contentsRepository = ContentsRepository();
     _colorTween = ColorTween(begin: Colors.white, end: Colors.black)
         .animate(_animationController);
+    _loadMyFavoriteContentState();
     _controller.addListener(() {
       // 스크롤 위치가 변하면 값을 변화시킴
       setState(() {
@@ -57,6 +63,16 @@ class _DetailContentViewState extends State<DetailContentView>
         _animationController.value = scrollpositionToAlpha / 255;
       });
     });
+    // 좋아요 버튼 로드하기
+  }
+
+  _loadMyFavoriteContentState() async {
+    // 좋아요 누른 컨텐츠인지를 리포지토리에서 불러오기
+    bool ck = await contentsRepository.isMyFavoriteContents(widget.data["cid"].toString());
+    setState(() {
+      isMyFavoriteContent = ck;
+    });
+    // print(ck);
   }
 
   @override
@@ -323,8 +339,11 @@ class _DetailContentViewState extends State<DetailContentView>
         children: [
           GestureDetector(
             onTap: () {
+              contentsRepository.addMyFavoriteContent(widget.data);
               setState(() {
                 isMyFavoriteContent = !isMyFavoriteContent; // 토글 방식
+                // 이 부분에서 로컬 스토리지에 값을 저장할 것
+                // 실제로는 api 통신 등으로 서버에 값을 넘기겠지만, 서버를 사용하지 않을 거라 로컬 스토리지 방식으로 구현
               });
               // 스낵바 사용이 키 대신 ScaffoldMessenger 쓰는 식으로 바뀜(기존 방식은 안 됨)
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(

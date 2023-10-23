@@ -1,7 +1,15 @@
+import 'dart:convert';
+
+import 'package:flutter_carrot_market_d5354/repository/local_storage_repository.dart';
+
 /**
  * 데이터를 관리함 (원래 API나 백엔드 쪽에서 할 역할 대신 값으로 대체)
+ * 컨텐츠 관련 부분은 모두 해당 리포지토리에서 관리하고 있기 때문에, 로컬 스토리지 부분을 상속함
  */
-class ContentsRepository {
+class ContentsRepository extends LocalStorageRepository{
+  // 좋아요 버튼 저장용 키
+  final String MY_FAVORITE_STORE_KEY = "MY_FAVORITE_STORE_KEY";
+
   Map<String, dynamic> data = {
     "ara": [
       {
@@ -176,5 +184,21 @@ class ContentsRepository {
     // 오류 테스트용 코드(테스트시 주석 해제해서 오류 발생시키기)
     // throw Exception();
     return data[location];
+  }
+
+  addMyFavoriteContent(Map<String, String> content) {
+    storeValue(MY_FAVORITE_STORE_KEY, jsonEncode(content));
+  }
+
+  isMyFavoriteContents(String cid) async {
+    // 바로 위에서 json 값으로 바꾼 값을 사용
+    String? jsonString = await getStoredValue(MY_FAVORITE_STORE_KEY);
+    if(jsonString != null) {
+      // 디코드
+      Map<String, dynamic> json = jsonDecode(jsonString);
+      return cid == json["cid"];
+    } else {
+      return null;
+    }
   }
 }
