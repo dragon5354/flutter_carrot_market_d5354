@@ -338,8 +338,15 @@ class _DetailContentViewState extends State<DetailContentView>
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {
-              contentsRepository.addMyFavoriteContent(widget.data);
+            onTap: () async {
+              if(isMyFavoriteContent) {
+                // 제거
+                await contentsRepository.deleteMyFavoriteContent(widget.data["cid"]!);
+              } else {
+                // 추가
+                await contentsRepository.addMyFavoriteContent(widget.data);
+              }
+            
               setState(() {
                 isMyFavoriteContent = !isMyFavoriteContent; // 토글 방식
                 // 이 부분에서 로컬 스토리지에 값을 저장할 것
