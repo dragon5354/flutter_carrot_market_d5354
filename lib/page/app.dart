@@ -2,6 +2,7 @@
   #1 ~ #4에서 시작 화면을 담당했던 home을, #5부터 app은 bottomNavigation 담당, home은 그 안의 home이라는 페이지를 담당하는 것으로 바꿈
 */
 import 'package:flutter/material.dart';
+import 'package:flutter_carrot_market_d5354/page/favorite.dart';
 import 'package:flutter_carrot_market_d5354/page/home.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -35,7 +36,7 @@ class _AppState extends State<App> {
       case 3:
         return Container();
       case 4:
-        return Container();
+        return MyFavoriteContents();
       default: // 디폴트값을 넣어줘야 null 오류에 안걸림
         return Container();
     }
